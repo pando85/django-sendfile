@@ -4,7 +4,6 @@ __version__ = '.'.join(map(str, VERSION))
 import os.path
 from mimetypes import guess_type
 import unicodedata
-from django.conf import settings
 
 
 def _lazy_load(fn):
@@ -26,14 +25,14 @@ def _get_sendfile():
         from importlib import import_module
     except ImportError:
         from django.utils.importlib import import_module
+    from django.conf import settings
     from django.core.exceptions import ImproperlyConfigured
 
     backend = getattr(settings, 'SENDFILE_BACKEND', None)
     if not backend:
         raise ImproperlyConfigured('You must specify a value for SENDFILE_BACKEND')
     module = import_module(backend)
-    return module.sendfile
-
+    return module.sendfile, backend
 
 
 def sendfile(request, filename, root_url=None, root_directory=None, attachment=False, attachment_filename=None, mimetype=None, encoding=None):
@@ -52,7 +51,7 @@ def sendfile(request, filename, root_url=None, root_directory=None, attachment=F
     If no mimetype or encoding are specified, then they will be guessed via the
     filename (using the standard python mimetypes module)
     '''
-    _sendfile = _get_sendfile()
+    _sendfile, backend = _get_sendfile()
 
     if not os.path.exists(filename):
         from django.http import Http404
@@ -64,8 +63,6 @@ def sendfile(request, filename, root_url=None, root_directory=None, attachment=F
             mimetype = guessed_mimetype
         else:
             mimetype = 'application/octet-stream'
-
-    backend = getattr(settings, 'SENDFILE_BACKEND', None)
 
     if(backend == 'sendfile.backends.nginx'):
         response = _sendfile(request, filename, root_url, root_directory, mimetype=mimetype)
