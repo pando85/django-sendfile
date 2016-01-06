@@ -36,7 +36,7 @@ def _get_sendfile():
 
 
 
-def sendfile(request, filename, attachment=False, attachment_filename=None, mimetype=None, encoding=None):
+def sendfile(request, filename, root_url=None, root_directory=None, attachment=False, attachment_filename=None, mimetype=None, encoding=None):
     '''
     create a response to send file using backend configured in SENDFILE_BACKEND
 
